@@ -20,9 +20,9 @@ def run_web_server():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-# ==================== আপনার সেটিংস ====================
+# ==================== আপনার কনফিগারেশন ====================
 TOKEN = "8808545994:AAG8fmbjQEKlENq2BYrk2SVCVM1wu9eWuEk"
-USER_CHAT_ID = None # আপনার চ্যাট আইডি জানা না থাকলে অটো খুঁজে নেবে
+USER_CHAT_ID = 6620414902  # <--- আপনার চ্যাট আইডি সরাসরি বসিয়ে দেওয়া হয়েছে
 # ====================================================
 
 def init_db():
@@ -62,26 +62,13 @@ def save_signal(pair, direction, entry_price):
         conn.close()
     except: pass
 
-def get_telegram_chat_id():
-    if USER_CHAT_ID: return USER_CHAT_ID
-    try:
-        res = requests.get(f"https://api.telegram.org/bot{TOKEN}/getUpdates", timeout=10).json()
-        if res.get("result"):
-            return res["result"][-1]["message"]["chat"]["id"]
-    except: pass
-    return None
-
 def send_instant_test_message(chat_id):
-    if not chat_id: return
-    msg = "🎉 *ভাই রে! আপনার আল্ট্রা লেভেলের নতুন কোডটি এখন সার্ভার থেকে সফলভাবে লাইভ হয়েছে। এখন থেকে রিয়েল-টাইম ডাটা স্ক্যান করা শুরু হলো!*"
+    msg = "🎉 *ভাই রাকিব! আপনার আল্ট্রা লেভেলের নতুন কোডটি এখন সার্ভার থেকে সফলভাবে লাইভ হয়েছে। এখন থেকে রিয়েল-টাইম ডাটা স্ক্যান করা শুরু হলো!*"
     try:
         requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown"})
     except: pass
 
 def send_institutional_alert(pair, direction, entry, tp, sl, reason):
-    chat_id = get_telegram_chat_id()
-    if not chat_id: return
-    
     status_emoji = "🟢 INSTITUTIONAL LONG (BUY)" if direction == "BUY" else "🚨 INSTITUTIONAL SHORT (SELL)"
     
     message = (
@@ -96,7 +83,7 @@ def send_institutional_alert(pair, direction, entry, tp, sl, reason):
         f"📊 *Orderbook Matrix:* {reason}"
     )
     try:
-        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": chat_id, "text": message, "parse_mode": "Markdown"})
+        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data={"chat_id": USER_CHAT_ID, "text": message, "parse_mode": "Markdown"})
     except: pass
 
 def run_institutional_engine():
@@ -145,9 +132,7 @@ schedule.every(2).minutes.do(run_institutional_engine)
 if __name__ == "__main__":
     init_db()
     
-    # সাথে সাথে টেস্ট মেসেজ পাঠানো হবে
-    found_id = get_telegram_chat_id()
-    if found_id:
-        send_instant_test_message(found_id)
+    # কোড রান হওয়া মাত্রই এই আইডিতে টেস্ট মেসেজ যাবে
+    send_instant_test_message(USER_CHAT_ID)
         
     run_web_server()
